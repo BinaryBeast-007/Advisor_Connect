@@ -8,8 +8,8 @@ export class GoogleCalendarService {
 
   constructor() {
     const auth = new google.auth.OAuth2(
-      process.env.VITE_GOOGLE_CLIENT_ID,
-      process.env.VITE_GOOGLE_CLIENT_SECRET,
+      import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
       `${window.location.origin}/oauth2callback`
     );
 
@@ -32,7 +32,6 @@ export class GoogleCalendarService {
         },
       });
 
-      // Process response and return available slots
       const busySlots = response.data.calendars?.primary?.busy || [];
       return this.calculateAvailableSlots(startTime, endTime, busySlots);
     } catch (error) {
@@ -63,8 +62,6 @@ export class GoogleCalendarService {
     endTime: Date,
     busySlots: Array<{ start: string; end: string }>
   ) {
-    // Implementation to calculate available slots based on busy periods
-    // This is a simplified version
     const availableSlots = [];
     let currentTime = new Date(startTime);
 

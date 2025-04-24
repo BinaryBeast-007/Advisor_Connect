@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GoogleCalendarService } from '../lib/googleCalendar';
 import { format } from 'date-fns';
@@ -12,33 +13,34 @@ interface BookingModalProps {
   duration: number;
 }
 
-const calendarService = new GoogleCalendarService();
-
-const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-
-useEffect(() => {
-  async function fetchSlots() {
-    const slots = await calendarService.getAvailableSlots(selectedDate);
-    setTimeSlots(
-      slots.map((slot, index) => ({
-        id: String(index),
-        time: new Date(slot.start).toLocaleTimeString([], { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        available: true,
-        startTime: slot.start,
-        endTime: slot.end,
-      }))
-    );
-  }
-  
-  fetchSlots();
-}, [selectedDate]);
-
 export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, duration }: BookingModalProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  
+  useEffect(() => {
+    const calendarService = new GoogleCalendarService();
+    
+    async function fetchSlots() {
+      const slots = await calendarService.getAvailableSlots(selectedDate);
+      setTimeSlots(
+        slots.map((slot, index) => ({
+          id: String(index),
+          time: new Date(slot.start).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          available: true,
+          startTime: slot.start,
+          endTime: slot.end,
+        }))
+      );
+    }
+    
+    if (isOpen) {
+      fetchSlots();
+    }
+  }, [selectedDate, isOpen]);
 
   if (!isOpen) return null;
 
@@ -111,6 +113,7 @@ export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, dura
           disabled={!selectedSlot}
           onClick={async () => {
             try {
+              const calendarService = new GoogleCalendarService();
               const slot = timeSlots.find(s => s.id === selectedSlot);
               if (!slot) return;
               
