@@ -11,16 +11,29 @@ interface BookingModalProps {
   duration: number;
 }
 
-const timeSlots: TimeSlot[] = [
-  { id: '1', time: '09:00', available: true },
-  { id: '2', time: '10:00', available: true },
-  { id: '3', time: '11:00', available: false },
-  { id: '4', time: '12:00', available: true },
-  { id: '5', time: '14:00', available: true },
-  { id: '6', time: '15:00', available: true },
-  { id: '7', time: '16:00', available: false },
-  { id: '8', time: '17:00', available: true },
-];
+const calendarService = new GoogleCalendarService();
+
+const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+
+useEffect(() => {
+  async function fetchSlots() {
+    const slots = await calendarService.getAvailableSlots(selectedDate);
+    setTimeSlots(
+      slots.map((slot, index) => ({
+        id: String(index),
+        time: new Date(slot.start).toLocaleTimeString([], { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        available: true,
+        startTime: slot.start,
+        endTime: slot.end,
+      }))
+    );
+  }
+  
+  fetchSlots();
+}, [selectedDate]);
 
 export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, duration }: BookingModalProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -95,13 +108,26 @@ export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, dura
 
         <button
           disabled={!selectedSlot}
-          onClick={() => {
-            // Handle booking confirmation
-            console.log('Booking confirmed:', {
-              date: selectedDate,
-              slotId: selectedSlot,
-              package: packageTitle,
-            });
+          onClick={async () => {
+            try {
+              const slot = timeSlots.find(s => s.id === selectedSlot);
+              if (!slot) return;
+              
+              await calendarService.createBooking(
+                slot.startTime,
+                slot.endTime,
+                {
+                  packageTitle,
+                  duration
+                }
+              );
+              
+              onClose();
+              alert('Booking confirmed successfully!');
+            } catch (error) {
+              console.error('Booking failed:', error);
+              alert('Failed to confirm booking. Please try again.');
+            }
           }}
           className="w-full rounded-full bg-blue-600 py-3 font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-400 enabled:hover:bg-blue-700"
         >
