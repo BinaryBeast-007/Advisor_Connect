@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { GoogleCalendarService } from '../lib/googleCalendar';
 import { format } from 'date-fns';
 import { X, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 import type { TimeSlot } from '../types';
