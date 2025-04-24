@@ -11,20 +11,86 @@ interface BookingModalProps {
   duration: number;
 }
 
-const timeSlots: TimeSlot[] = [
-  { id: '1', time: '09:00', available: true },
-  { id: '2', time: '10:00', available: true },
-  { id: '3', time: '11:00', available: false },
-  { id: '4', time: '12:00', available: true },
-  { id: '5', time: '14:00', available: true },
-  { id: '6', time: '15:00', available: true },
-  { id: '7', time: '16:00', available: false },
-  { id: '8', time: '17:00', available: true },
-];
-
 export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, duration }: BookingModalProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const advisorId = packageTitle.split(':')[0]; // Assuming advisor ID is part of package title
+
+  useEffect(() => {
+    async function fetchAvailability() {
+      setIsLoading(true);
+      try {
+        // Get the day of week (0-6, where 0 is Sunday)
+        const dayOfWeek = format(selectedDate, 'EEEE').toLowerCase();
+        
+        // Fetch advisor's availability for the selected day
+        const { data: availabilityData, error: availabilityError } = await supabase
+          .from('advisor_availability')
+          .select('*')
+          .eq('advisor_id', advisorId)
+          .eq('day_of_week', dayOfWeek)
+          .eq('is_active', true);
+
+        if (availabilityError) throw availabilityError;
+
+        // Fetch existing bookings for the selected date
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const { data: bookingsData, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('scheduled_at')
+          .eq('advisor_id', advisorId)
+          .eq('status', 'booked')
+          .gte('scheduled_at', startOfDay.toISOString())
+          .lte('scheduled_at', endOfDay.toISOString());
+
+        if (bookingsError) throw bookingsError;
+
+        // Generate available time slots
+        const slots: TimeSlot[] = [];
+        availabilityData?.forEach(availability => {
+          const [startHour, startMinute] = availability.start_time.split(':');
+          const [endHour, endMinute] = availability.end_time.split(':');
+          const startTime = new Date(selectedDate);
+          startTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+          const endTime = new Date(selectedDate);
+          endTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+
+          // Generate slots with duration intervals
+          while (startTime < endTime) {
+            const slotTime = format(startTime, 'HH:mm');
+            const isBooked = bookingsData?.some(booking => 
+              format(new Date(booking.scheduled_at), 'HH:mm') === slotTime
+            );
+
+            slots.push({
+              id: startTime.toISOString(),
+              time: slotTime,
+              available: !isBooked
+            });
+
+            startTime.setMinutes(startTime.getMinutes() + duration);
+          }
+        });
+
+        setTimeSlots(slots);
+      } catch (error) {
+        console.error('Error fetching availability:', error);
+        setTimeSlots([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (isOpen && advisorId) {
+      fetchAvailability();
+    }
+  }, [selectedDate, advisorId, duration, isOpen]);
 
   if (!isOpen) return null;
 
@@ -95,13 +161,30 @@ export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, dura
 
         <button
           disabled={!selectedSlot}
-          onClick={() => {
-            // Handle booking confirmation
-            console.log('Booking confirmed:', {
-              date: selectedDate,
-              slotId: selectedSlot,
-              package: packageTitle,
-            });
+          onClick={async () => {
+            try {
+              const { data: session } = await supabase.auth.getSession();
+              if (!session?.session?.user) {
+                window.location.href = '/login';
+                return;
+              }
+
+              const scheduledAt = new Date(selectedSlot!);
+              const { error } = await supabase.from('bookings').insert({
+                customer_id: session.session.user.id,
+                advisor_id: advisorId,
+                package_id: packageTitle.split(':')[1], // Assuming package ID is part of title
+                scheduled_at: scheduledAt.toISOString(),
+                status: 'booked'
+              });
+
+              if (error) throw error;
+              onClose();
+              // You might want to show a success message or redirect
+            } catch (error) {
+              console.error('Error creating booking:', error);
+              // Show error message to user
+            }
           }}
           className="w-full rounded-full bg-blue-600 py-3 font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-400 enabled:hover:bg-blue-700"
         >
