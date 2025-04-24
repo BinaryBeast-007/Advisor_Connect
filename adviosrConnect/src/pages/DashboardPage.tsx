@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -12,23 +12,36 @@ import { supabase } from '../lib/supabase';
 import type { Advisor } from '../types';
 
 export function DashboardPage() {
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('User');
   const [bookmarkedAdvisors, setBookmarkedAdvisors] = useState<Advisor[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchUserData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          navigate('/login');
+          return;
+        }
 
-      const { data: userData } = await supabase
-        .from('users')
-        .select('full_name')
-        .eq('id', session.user.id)
-        .single();
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('full_name')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-      if (userData) {
-        setUserName(userData.full_name);
+        if (error) {
+          console.error('Error fetching user data:', error);
+          return;
+        }
+
+        if (userData?.full_name) {
+          setUserName(userData.full_name);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserData:', error);
       }
     }
 
@@ -101,7 +114,7 @@ export function DashboardPage() {
 
     fetchUserData();
     fetchBookmarkedAdvisors();
-  }, []);
+  }, [navigate]);
 
   return (
     <DashboardLayout>
@@ -109,7 +122,7 @@ export function DashboardPage() {
         {/* Welcome Section */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {userName || 'User'}!</h1>
+            <h1 className="text-2xl font-bold">Welcome back, {userName}!</h1>
             <p className="text-gray-600">Here's what's happening with your account.</p>
           </div>
           <Link

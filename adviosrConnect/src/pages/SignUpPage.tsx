@@ -40,7 +40,7 @@ export function SignUpPage() {
               email,
               full_name: fullName,
               role: 'user',
-              password_hash: 'hashed_' + password, // In a real app, use proper password hashing
+              password_hash: password, // In a real app, use proper password hashing
             },
           ])
           .select(); // Add .select() to ensure the insert completed

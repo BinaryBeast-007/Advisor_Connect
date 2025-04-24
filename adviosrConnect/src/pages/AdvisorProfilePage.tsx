@@ -26,7 +26,9 @@ export function AdvisorProfilePage() {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [showFullBio, setShowFullBio] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(
+    null
+  );
 
   useEffect(() => {
     async function fetchData() {
@@ -37,19 +39,6 @@ export function AdvisorProfilePage() {
           .select('*')
           .eq('advisor_id', id)
           .single();
-
-          // .from('advisors')
-          // .select(`
-          //   *,
-          //   users (
-          //     id,
-          //     email,
-          //     full_name,
-          //     phone
-          //   )
-          // `)
-          // .eq('id', id)
-          // .single();
 
         if (advisorError) {
           throw advisorError;
@@ -84,22 +73,35 @@ export function AdvisorProfilePage() {
         const formattedAdvisor: Advisor = {
           id: advisorData.advisor_id,
           name: advisorData?.full_name || 'Unknown Advisor',
-          type: advisorData.registration_type === 'SEBI' ? 'analyst' : 'distributor',
+          type:
+            advisorData.registration_type === 'SEBI'
+              ? 'analyst'
+              : 'distributor',
           yearsOfExperience: advisorData.years_of_experience || 0,
           languages: advisorData.languages || [],
-          imageUrl: advisorData.profile_picture_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: reviewsData.length > 0 
-            ? reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length 
-            : 0,
+          imageUrl:
+            advisorData.profile_picture_url ||
+            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+          rating:
+            reviewsData.length > 0
+              ? reviewsData.reduce((acc, review) => acc + review.rating, 0) /
+                reviewsData.length
+              : 0,
           reviewCount: reviewsData.length,
           about: advisorData.about_me || '',
-          sebiNumber: advisorData.registration_type === 'SEBI' ? advisorData.registration_number : undefined,
-          arnNumber: advisorData.registration_type === 'MFD' ? advisorData.registration_number : undefined,
+          sebiNumber:
+            advisorData.registration_type === 'SEBI'
+              ? advisorData.registration_number
+              : undefined,
+          arnNumber:
+            advisorData.registration_type === 'MFD'
+              ? advisorData.registration_number
+              : undefined,
           verifications: ['KYC', advisorData.registration_type],
           longBio: advisorData.about_me || '',
         };
 
-        const formattedPackages: ServicePackage[] = packagesData.map(pkg => ({
+        const formattedPackages: ServicePackage[] = packagesData.map((pkg) => ({
           id: pkg.id,
           title: pkg.title,
           description: pkg.subtitle || '',
@@ -108,7 +110,7 @@ export function AdvisorProfilePage() {
           features: pkg.features || [],
         }));
 
-        const formattedReviews: Review[] = reviewsData.map(review => ({
+        const formattedReviews: Review[] = reviewsData.map((review) => ({
           id: review.id,
           advisorId: review.advisor_id,
           userName: review.reviewer_name || 'Anonymous',
@@ -122,7 +124,9 @@ export function AdvisorProfilePage() {
         setReviews(formattedReviews);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load advisor profile');
+        setError(
+          err instanceof Error ? err.message : 'Failed to load advisor profile'
+        );
       } finally {
         setLoading(false);
       }
@@ -138,7 +142,7 @@ export function AdvisorProfilePage() {
 
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3);
 
-  const handlePackageSelect = (pkg: ServicePackage) => {
+  const handlePackageSelect = (advisorId: string, pkg: ServicePackage) => {
     setSelectedPackage(pkg);
     setIsBookingModalOpen(true);
   };
@@ -164,7 +168,9 @@ export function AdvisorProfilePage() {
         <main className="container mx-auto px-4 py-8">
           <div className="rounded-lg bg-white p-6 shadow-md">
             <h2 className="text-xl font-semibold text-red-600">Error</h2>
-            <p className="mt-2 text-gray-600">{error || 'Failed to load advisor profile'}</p>
+            <p className="mt-2 text-gray-600">
+              {error || 'Failed to load advisor profile'}
+            </p>
             <button
               onClick={() => navigate('/')}
               className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
@@ -196,7 +202,10 @@ export function AdvisorProfilePage() {
                   <h1 className="text-2xl font-bold">{advisor.name}</h1>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Star className="h-4 w-4 text-yellow-400" />
-                    <span>{advisor.rating.toFixed(1)} ({advisor.reviewCount} reviews)</span>
+                    <span>
+                      {advisor.rating.toFixed(1)} ({advisor.reviewCount}{' '}
+                      reviews)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -246,9 +255,11 @@ export function AdvisorProfilePage() {
                   )}
                 </button>
               </div>
-              <div className={`mt-4 overflow-hidden transition-all duration-300 ${
-                showFullBio ? 'max-h-none' : 'max-h-32'
-              }`}>
+              <div
+                className={`mt-4 overflow-hidden transition-all duration-300 ${
+                  showFullBio ? 'max-h-none' : 'max-h-32'
+                }`}
+              >
                 <p className="text-gray-600">{advisor.longBio}</p>
               </div>
             </div>
@@ -262,7 +273,8 @@ export function AdvisorProfilePage() {
                 <ServicePackageCard
                   key={pkg.id}
                   package={pkg}
-                  onSelect={() => handlePackageSelect(pkg)}
+                  advisorId={advisor.id}
+                  onSelect={handlePackageSelect}
                 />
               ))}
             </div>
@@ -313,6 +325,8 @@ export function AdvisorProfilePage() {
           packageTitle={selectedPackage.title}
           packagePrice={selectedPackage.price}
           duration={selectedPackage.duration}
+          advisorId={advisor.id}
+          packageId={selectedPackage.id}
         />
       )}
 

@@ -4,10 +4,11 @@ import type { ServicePackage } from '../types';
 
 interface ServicePackageCardProps {
   package: ServicePackage;
-  onSelect: () => void;
+  advisorId: string;
+  onSelect: (advisorId: string, pkg: ServicePackage) => void;
 }
 
-export function ServicePackageCard({ package: pkg, onSelect }: ServicePackageCardProps) {
+export function ServicePackageCard({ package: pkg, advisorId, onSelect }: ServicePackageCardProps) {
   return (
     <div className="rounded-lg border bg-white p-6 shadow-sm transition-all hover:shadow-md">
       <div className="mb-4">
@@ -32,7 +33,7 @@ export function ServicePackageCard({ package: pkg, onSelect }: ServicePackageCar
       <div className="flex items-center justify-between">
         <span className="text-2xl font-bold">₹{pkg.price}</span>
         <button
-          onClick={onSelect}
+          onClick={() => onSelect(advisorId, pkg)}
           className="flex items-center space-x-1 rounded-full bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
         >
           <span>Book</span>
