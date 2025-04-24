@@ -13,4 +13,8 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd adviosrConnect && npm install && npm run dev"
+args = "cd adviosrConnect && npm run dev"
+
+[[ports]]
+localPort = 5173
+externalPort = 80
