@@ -173,17 +173,19 @@ export function BookingModal({ isOpen, onClose, packageTitle, packagePrice, dura
               const { error } = await supabase.from('bookings').insert({
                 customer_id: session.session.user.id,
                 advisor_id: advisorId,
-                package_id: packageTitle.split(':')[1], // Assuming package ID is part of title
+                package_id: packageTitle, // Use the full package ID
                 scheduled_at: scheduledAt.toISOString(),
                 status: 'booked'
               });
 
               if (error) throw error;
-              onClose();
-              // You might want to show a success message or redirect
+              
+              // Show success message and redirect to dashboard
+              alert('Booking confirmed successfully!');
+              window.location.href = '/dashboard';
             } catch (error) {
               console.error('Error creating booking:', error);
-              // Show error message to user
+              alert('Failed to create booking. Please try again.');
             }
           }}
           className="w-full rounded-full bg-blue-600 py-3 font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-400 enabled:hover:bg-blue-700"
