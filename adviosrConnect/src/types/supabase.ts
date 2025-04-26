@@ -149,11 +149,46 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      bookings: {
+        Row: {
+          id: string
+          customer_id: string
+          advisor_id: string
+          package_id: string
+          scheduled_at: string
+          status: string
+          rating: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          advisor_id: string
+          package_id: string
+          scheduled_at: string
+          status?: string
+          rating?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          advisor_id?: string
+          package_id?: string
+          scheduled_at?: string
+          status?: string
+          rating?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
     }
     Views: {
       advisor_profiles: {
         Row: {
-          id: string
+          advisor_id: string
           registration_number: string | null
           registration_type: string | null
           years_of_experience: number | null

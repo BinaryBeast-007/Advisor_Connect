@@ -41,6 +41,26 @@ export function AdvisorSection({ title, type }: AdvisorSectionProps) {
           return;
         }
 
+        // Get reviews for rating calculation
+        const { data: reviewsData, error: reviewsError } = await supabase
+          .from('advisor_reviews')
+          .select('advisor_id, rating');
+
+        if (reviewsError) {
+          throw reviewsError;
+        }
+
+        // Calculate average ratings
+        const ratings = reviewsData.reduce((acc, review) => {
+          acc[review.advisor_id] = acc[review.advisor_id] || {
+            sum: 0,
+            count: 0,
+          };
+          acc[review.advisor_id].sum += review.rating;
+          acc[review.advisor_id].count += 1;
+          return acc;
+        }, {} as Record<string, { sum: number; count: number }>);
+
         const formattedAdvisors: Advisor[] = advisorData.map((advisor) => ({
           id: advisor.advisor_id,
           name: advisor?.full_name || 'Unknown Advisor',
@@ -51,8 +71,10 @@ export function AdvisorSection({ title, type }: AdvisorSectionProps) {
           imageUrl:
             advisor.profile_picture_url ||
             'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: 4.5, // Default rating until we implement reviews
-          reviewCount: 10, // Default count until we implement reviews
+          rating: ratings[advisor.advisor_id]
+            ? ratings[advisor.advisor_id].sum / ratings[advisor.advisor_id].count
+            : 0,
+          reviewCount: ratings[advisor.advisor_id]?.count || 0,
           about: advisor.about_me || '',
           sebiNumber:
             advisor.registration_type === 'SEBI'

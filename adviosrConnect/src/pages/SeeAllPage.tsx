@@ -73,10 +73,10 @@ export function SeeAllPage({ type }: SeeAllPageProps) {
           imageUrl:
             advisor.profile_picture_url ||
             'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          rating: ratings[advisor.id]
-            ? ratings[advisor.id].sum / ratings[advisor.id].count
+          rating: ratings[advisor.advisor_id]
+            ? ratings[advisor.advisor_id].sum / ratings[advisor.advisor_id].count
             : 0,
-          reviewCount: ratings[advisor.id]?.count || 0,
+          reviewCount: ratings[advisor.advisor_id]?.count || 0,
           about: advisor.about_me || '',
           sebiNumber:
             advisor.registration_type === 'SEBI'
